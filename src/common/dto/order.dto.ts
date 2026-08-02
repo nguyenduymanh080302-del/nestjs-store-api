@@ -37,9 +37,9 @@ export class GetOrderParamDto {
 
 export class OrderProductItemDto {
     @Type(() => Number)
-    @IsDefined({ message: 'message.order.warehouse-id-is-required' })
+    @IsOptional()
     @IsInt({ message: 'message.order.warehouse-id-must-is-number' })
-    warehouseId: number;
+    warehouseId?: number;
 
     @Type(() => Number)
     @IsDefined({ message: 'message.order.product.product-id-is-required' })

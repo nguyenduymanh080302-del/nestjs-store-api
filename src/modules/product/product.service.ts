@@ -99,7 +99,8 @@ export class ProductService {
      */
     async findAllProduct(query: GetProductsQueryDto) {
         const trimmedSearch = query.search?.trim();
-        const { page = 1, limit = 10 } = query;
+        const { page = 1, limit = 10, isActive = true } = query;
+        console.log(isActive)
         const skip = (page - 1) * limit;
 
         if (!trimmedSearch) {
@@ -109,6 +110,9 @@ export class ProductService {
                     orderBy: { createdAt: 'desc' },
                     skip,
                     take: limit,
+                    where: {
+                        isActive: isActive,
+                    },
                 }),
                 this.prisma.product.count(),
             ]);

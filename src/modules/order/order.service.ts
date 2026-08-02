@@ -75,6 +75,7 @@ export class OrderService {
         const warehouseIds = new Set<number>();
 
         for (const item of products) {
+            if (!item.warehouseId) continue;
             const key = `${item.warehouseId}-${item.productId}-${item.unitId}`;
             if (keys.has(key)) throw new BadRequestException('message.order.product-duplicated');
             keys.add(key);
@@ -82,7 +83,9 @@ export class OrderService {
         }
 
         const [warehouses, productUnits] = await Promise.all([
-            tx.warehouse.findMany({ where: { id: { in: [...warehouseIds] } }, select: { id: true } }),
+            warehouseIds.size > 0
+                ? tx.warehouse.findMany({ where: { id: { in: [...warehouseIds] } }, select: { id: true } })
+                : Promise.resolve([]),
             tx.productUnit.findMany({
                 where: { OR: products.map(({ productId, unitId }) => ({ productId, unitId })) },
                 select: { productId: true, unitId: true },
@@ -93,6 +96,7 @@ export class OrderService {
         if (productUnits.length !== products.length) throw new NotFoundException('message.order.product-not-found');
 
         for (const item of products) {
+            if (!item.warehouseId) continue;
             const result = await tx.warehouseProduct.updateMany({
                 where: {
                     warehouseId: item.warehouseId,

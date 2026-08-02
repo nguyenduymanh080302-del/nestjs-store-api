@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/mapped-types";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
     IsDefined,
     IsInt,
@@ -143,4 +143,15 @@ export class GetProductsQueryDto {
     @Min(1, { message: 'message.product.limit-min-is-1' })
     @Max(100, { message: 'message.product.limit-max-is-100' })
     limit: number = 10;
+
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+        return value;
+    })
+    @IsBoolean({
+        message: 'message.product.is-active-must-is-boolean',
+    })
+    isActive?: boolean = true;
 }

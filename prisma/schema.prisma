@@ -54,15 +54,15 @@ model Account {
 }
 
 model Warehouse {
-  id        Int                @id @default(autoincrement())
-  name      String             @unique
-  isActive  Boolean            @default(true)
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-  address   String?
-  accounts  Account[]
-  imports   Import[]
-  products  WarehouseProduct[]
+  id            Int                @id @default(autoincrement())
+  name          String             @unique
+  isActive      Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  address       String?
+  accounts      Account[]
+  imports       Import[]
+  products      WarehouseProduct[]
   orderProducts OrderProduct[]
 }
 
@@ -223,7 +223,6 @@ model Order {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   deliveryId      Int?
-  warehouseId     Int?
   deliveryPerson  String?
   deliveryPhone   String?
   paidAmount      Float?         @default(0)
@@ -234,7 +233,6 @@ model Order {
 
   @@index([createdAt])
   @@index([status])
-  @@index([warehouseId])
   @@index([creatorId])
   @@index([customerId])
 }
@@ -257,7 +255,6 @@ model OrderProduct {
 
   @@index([orderId])
   @@index([productId, unitId])
-  @@index([warehouseId])
 }
 
 enum OrderStatus {
