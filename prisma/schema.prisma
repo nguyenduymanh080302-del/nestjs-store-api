@@ -225,7 +225,9 @@ model Order {
   deliveryId      Int?
   deliveryPerson  String?
   deliveryPhone   String?
+  deliveryFee     Float?         @default(0)
   paidAmount      Float?         @default(0)
+  profit          Float?         @default(0)
   createdBy       Account        @relation(fields: [creatorId], references: [id])
   customer        Customer?      @relation(fields: [customerId], references: [id])
   delivery        Delivery?      @relation(fields: [deliveryId], references: [id])
@@ -244,6 +246,7 @@ model OrderProduct {
   quantity    Int
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  importPrice Float
   sellPrice   Float
   unitId      Int
   vatPercent  Float

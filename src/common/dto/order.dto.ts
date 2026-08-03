@@ -58,6 +58,12 @@ export class OrderProductItemDto {
     quantity: number;
 
     @Type(() => Number)
+    @IsDefined({ message: 'message.order.product.import-price-is-required' })
+    @IsNumber({}, { message: 'message.order.product.import-price-must-is-number' })
+    @Min(0, { message: 'message.order.product.import-price-min-is-0' })
+    importPrice: number;
+
+    @Type(() => Number)
     @IsDefined({ message: 'message.order.product.sell-price-is-required' })
     @IsNumber({}, { message: 'message.order.product.sell-price-must-is-number' })
     @Min(0, { message: 'message.order.product.sell-price-min-is-0' })
@@ -138,6 +144,12 @@ export class CreateOrderBodyDto {
     @IsNumber({}, { message: 'message.order.total-amount-must-is-number' })
     @Min(0, { message: 'message.order.total-amount-min-is-0' })
     totalAmount: number;
+
+    @Type(() => Number)
+    @IsOptional()
+    @IsNumber({}, { message: 'message.order.delivery-fee-must-is-number' })
+    @Min(0, { message: 'message.order.delivery-fee-min-is-0' })
+    deliveryFee?: number;
 
     @IsOptional()
     @IsIn(ORDER_STATUS, { message: 'message.order.status-invalid' })

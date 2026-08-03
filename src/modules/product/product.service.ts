@@ -98,9 +98,9 @@ export class ProductService {
      * @returns Object with array of product items and pagination details.
      */
     async findAllProduct(query: GetProductsQueryDto) {
+
         const trimmedSearch = query.search?.trim();
         const { page = 1, limit = 10, isActive = true } = query;
-        console.log(isActive)
         const skip = (page - 1) * limit;
 
         if (!trimmedSearch) {

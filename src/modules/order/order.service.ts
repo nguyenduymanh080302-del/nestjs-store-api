@@ -139,10 +139,65 @@ export class OrderService {
             productId: item.productId,
             unitId: item.unitId,
             quantity: item.quantity,
+            importPrice: item.importPrice,
             sellPrice: item.sellPrice,
             extraPrice: item.extraPrice ?? 0,
             vatPercent: item.vatPercent,
         }));
+    }
+
+    /**
+     * Calculates store profit from a sale order using the product import cost base.
+     *
+     * @param order A sale order object containing total, VAT, discount, and products.
+     * @returns The computed store profit value rounded to two decimals.
+     */
+    private calculateOrderProfit(order: {
+        totalAmount: number;
+        vatValue: number;
+        discountValue?: number | null;
+        products?: Array<{ quantity: number; importPrice?: number | null; productUnit?: { importPrice?: number | null } }>;
+    }) {
+        const importCost = (order.products || []).reduce((sum, item) => {
+            const quantity = Number(item.quantity || 0);
+            const importPrice = Number(item.importPrice ?? item.productUnit?.importPrice ?? 0);
+            return sum + (quantity * importPrice);
+        }, 0);
+
+        return Number((
+            Number(order.totalAmount || 0)
+            + Number(order.vatValue || 0)
+            - Number(order.discountValue || 0)
+            - importCost
+        ).toFixed(2));
+    }
+
+    /**
+     * Builds a normalized order payload containing the computed store profit field before persistence.
+     *
+     * @param tx Prisma transaction client used for lookup operations.
+     * @param orderData Order fields from the request body.
+     * @param products Array of order product DTOs used to calculate import cost.
+     * @returns An order payload object with the profit value attached.
+     */
+    private buildOrderProfitPayload(
+        orderData: { totalAmount: number; vatValue: number; discountValue?: number | null },
+        products: OrderProductItemDto[],
+    ) {
+        const importCost = products.reduce((sum, item) => {
+            const quantity = Number(item.quantity || 0);
+            const importPrice = Number(item.importPrice || 0);
+            return sum + (quantity * importPrice);
+        }, 0);
+
+        const profit = Number((
+            Number(orderData.totalAmount || 0)
+            + Number(orderData.vatValue || 0)
+            - Number(orderData.discountValue || 0)
+            - importCost
+        ).toFixed(2));
+
+        return { profit };
     }
 
     /**
@@ -161,16 +216,23 @@ export class OrderService {
         await this.validateRelations(customerId, deliveryId);
         return this.prisma.$transaction(async (tx) => {
             await this.validateAndReduceStock(tx, products);
-            return tx.order.create({
+            const { profit } = this.buildOrderProfitPayload(orderData, products);
+            const createdOrder = await tx.order.create({
                 data: {
                     ...orderData,
                     customerId,
                     deliveryId,
                     creatorId,
+                    profit,
                     products: { create: this.buildOrderProducts(products) },
                 },
                 include: this.orderInclude,
             });
+
+            return {
+                ...createdOrder,
+                profit: this.calculateOrderProfit({ ...createdOrder, products: createdOrder.products }),
+            };
         });
     }
 
@@ -198,7 +260,13 @@ export class OrderService {
             this.prisma.order.findMany({ where, include: this.orderInclude, orderBy: { createdAt: 'desc' }, skip, take: limit }),
             this.prisma.order.count({ where }),
         ]);
-        return { items, pagination: { page, limit, total, totalPages: total === 0 ? 0 : Math.ceil(total / limit) } };
+
+        const enrichedItems = items.map((item) => ({
+            ...item,
+            profit: this.calculateOrderProfit(item),
+        }));
+
+        return { items: enrichedItems, pagination: { page, limit, total, totalPages: total === 0 ? 0 : Math.ceil(total / limit) } };
     }
 
     /**
@@ -211,7 +279,10 @@ export class OrderService {
     async findOrderById(id: number) {
         const order = await this.prisma.order.findUnique({ where: { id }, include: this.orderInclude });
         if (!order) throw new NotFoundException('message.order.not-found');
-        return order;
+        return {
+            ...order,
+            profit: this.calculateOrderProfit(order),
+        };
     }
 
     /**
@@ -225,7 +296,26 @@ export class OrderService {
      */
     async updateOrder(id: number, dto: UpdateOrderBodyDto) {
         const currentOrder = await this.prisma.order.findUnique({
-            where: { id }, select: { customerId: true, deliveryId: true, products: true },
+            where: { id },
+            select: {
+                customerId: true,
+                deliveryId: true,
+                products: {
+                    select: {
+                        productId: true,
+                        unitId: true,
+                        quantity: true,
+                        importPrice: true,
+                        sellPrice: true,
+                        vatPercent: true,
+                        warehouseId: true,
+                        extraPrice: true,
+                    },
+                },
+                totalAmount: true,
+                vatValue: true,
+                discountValue: true,
+            },
         });
         if (!currentOrder) throw new NotFoundException('message.order.not-found');
         const { products, customerId, deliveryId, ...orderData } = dto;
@@ -248,11 +338,39 @@ export class OrderService {
                 await tx.orderProduct.createMany({ data: this.buildOrderProducts(products).map((item) => ({ ...item, orderId: id })) });
             }
 
-            return tx.order.update({
+            const { profit } = this.buildOrderProfitPayload(
+                {
+                    totalAmount: Number(orderData.totalAmount ?? currentOrder.totalAmount ?? 0),
+                    vatValue: Number(orderData.vatValue ?? currentOrder.vatValue ?? 0),
+                    discountValue: orderData.discountValue ?? currentOrder.discountValue ?? 0,
+                },
+                products || currentOrder.products.map((item) => ({
+                    productId: item.productId,
+                    unitId: item.unitId,
+                    quantity: item.quantity,
+                    importPrice: Number(item.importPrice || 0),
+                    sellPrice: 0,
+                    vatPercent: 0,
+                    warehouseId: item.warehouseId ?? undefined,
+                    extraPrice: 0,
+                })),
+            );
+
+            const updatedOrder = await tx.order.update({
                 where: { id },
-                data: { ...orderData, ...(customerId !== undefined ? { customerId } : {}), ...(deliveryId !== undefined ? { deliveryId } : {}) },
+                data: {
+                    ...orderData,
+                    ...(customerId !== undefined ? { customerId } : {}),
+                    ...(deliveryId !== undefined ? { deliveryId } : {}),
+                    profit,
+                },
                 include: this.orderInclude,
             });
+
+            return {
+                ...updatedOrder,
+                profit: this.calculateOrderProfit({ ...updatedOrder, products: updatedOrder.products }),
+            };
         });
     }
 
