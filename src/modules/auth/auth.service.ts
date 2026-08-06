@@ -8,6 +8,7 @@ import { compareHash, hashData } from 'common/helper/hash.helper';
 import { Request } from 'express';
 import { SessionService } from 'modules/session/session.service';
 import { PrismaService } from 'prisma/prisma.service';
+import { Permission } from 'utils/enum';
 
 @Injectable()
 export class AuthService {
@@ -103,17 +104,49 @@ export class AuthService {
             throw new ConflictException('message.account.duplicated');
         }
 
+        const adminEmail = this.config.get<string>('ADMIN_EMAIL')?.toLowerCase();
+        const isAdminRegistration = payload.email?.toLowerCase() === adminEmail;
+        const roleCode = isAdminRegistration ? 'admin' : 'employee';
+        const rolePermissions = isAdminRegistration
+            ? [
+                Permission.MANAGE_DASHBOARD,
+                Permission.MANAGE_WAREHOUSE,
+                Permission.MANAGE_CONTENT,
+                Permission.MANAGE_ACCOUNT,
+                Permission.MANAGE_SALES,
+                Permission.MANAGE_EMPLOYEE,
+            ]
+            : [];
+
+        const role = await this.prisma.role.upsert({
+            where: {
+                code: roleCode,
+            },
+            update: {
+                name: roleCode,
+                permissions: rolePermissions,
+                isActive: true,
+            },
+            create: {
+                code: roleCode,
+                name: roleCode,
+                permissions: rolePermissions,
+                isActive: true,
+            },
+        });
+
         const hashedPassword = await hashData(payload.password);
         const newAccount = await this.prisma.account.create({
             data: {
                 name: payload.name,
                 username: payload.username,
                 password: hashedPassword,
-                roleId: payload.roleId,
+                roleId: role.id,
                 email: payload.email,
                 avatar: payload.avatar,
                 phone: payload.phone,
                 address: payload.address,
+                isActive: isAdminRegistration,
             }
         });
         return { accountId: newAccount.id }

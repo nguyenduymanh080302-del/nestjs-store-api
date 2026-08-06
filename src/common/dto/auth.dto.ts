@@ -37,10 +37,10 @@ export class SignupDto {
     @MaxLength(32, { message: "message.account.password.max-length-is-32" })
     password: string;
 
-    @IsDefined({ message: 'message.account.name.is-required' })
+    @IsOptional()
     @Type(() => Number)
     @IsInt({ message: "message.account.role.must-is-number" })
-    roleId: number;
+    roleId?: number;
 
     // optional fields
     @IsEmail({}, { message: "message.account.email.wrong-format" })
