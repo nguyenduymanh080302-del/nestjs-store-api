@@ -5,4 +5,4 @@ import { Permission } from 'utils/enum';
 export const PERMISSIONS_KEY = 'permissions';
 
 export const Permissions = (...permissions: Permission[]) =>
-    SetMetadata(PERMISSIONS_KEY, permissions);
+  SetMetadata(PERMISSIONS_KEY, permissions);

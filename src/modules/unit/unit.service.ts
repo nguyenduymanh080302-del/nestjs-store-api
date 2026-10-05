@@ -13,7 +13,7 @@ export class UnitService {
    *
    * @param prisma Database service instance for Prisma ORM.
    */
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Creates a new measurement unit after checking name uniqueness.
@@ -22,19 +22,17 @@ export class UnitService {
    * @returns The created unit entity.
    * @throws ConflictException If a unit with the same name already exists.
    */
-  async createUnit(
-    data: CreateUnitBodyDto,
-  ) {
+  async createUnit(data: CreateUnitBodyDto) {
     const exists = await this.prisma.unit.findUnique({
-      where: { name: data.name },
+      where: { name: data.name }
     });
 
     if (exists) {
-      throw new ConflictException("message.unit.name-duplicated");
+      throw new ConflictException('message.unit.name-duplicated');
     }
 
     const newUnit = await this.prisma.unit.create({ data });
-    return newUnit
+    return newUnit;
   }
 
   /**
@@ -44,7 +42,7 @@ export class UnitService {
    */
   async findAllUnit() {
     return await this.prisma.unit.findMany({
-      orderBy: { name: 'desc' },
+      orderBy: { name: 'desc' }
     });
   }
 
@@ -57,7 +55,7 @@ export class UnitService {
    */
   async findUnitById(id: number) {
     const unit = await this.prisma.unit.findUnique({
-      where: { id },
+      where: { id }
     });
 
     if (!unit) {
@@ -75,15 +73,12 @@ export class UnitService {
    * @returns The updated unit entity.
    * @throws NotFoundException If the unit is not found.
    */
-  async updateUnit(
-    id: number,
-    data: UpdateUnitBodyDto,
-  ) {
+  async updateUnit(id: number, data: UpdateUnitBodyDto) {
     await this.findUnitById(id);
 
     return this.prisma.unit.update({
       where: { id },
-      data,
+      data
     });
   }
 
@@ -98,7 +93,7 @@ export class UnitService {
     await this.findUnitById(id);
 
     return this.prisma.unit.delete({
-      where: { id },
+      where: { id }
     });
   }
 }

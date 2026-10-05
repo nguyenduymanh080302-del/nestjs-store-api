@@ -2,7 +2,6 @@
 import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
-import { single } from 'rxjs';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -29,8 +28,8 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      "prettier/prettier": ['error', { endOfLine: "auto", singleQuote: true, trailingComma: "auto" }],
-      "quotes": ['error', 'single'],
+      'prettier/prettier': ['error', { endOfLine: 'auto', singleQuote: true, trailingComma: 'none' }],
+      'quotes': ['error', 'single'],
     },
   },
 );

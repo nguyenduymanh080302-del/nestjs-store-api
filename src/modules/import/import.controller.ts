@@ -6,23 +6,29 @@ import { ImportService } from './import.service';
 
 @Controller('import')
 export class ImportController {
-    /**
-     * Constructs the ImportController instance.
-     *
-     * @param importService Service handling inventory import transactions.
-     */
-    constructor(private readonly importService: ImportService) { }
+  /**
+   * Constructs the ImportController instance.
+   *
+   * @param importService Service handling inventory import transactions.
+   */
+  constructor(private readonly importService: ImportService) {}
 
-    /**
-     * Endpoint to record a new inventory stock import transaction.
-     *
-     * @param data DTO payload containing warehouseId, supplierId, and imported product items.
-     * @returns ApiResponse containing created import transaction record.
-     */
-    @UseGuards(JwtAccessGuard)
-    @Post()
-    async createImport(@Body() data: CreateImportBodyDto): Promise<ApiResponse<unknown>> {
-        const result = await this.importService.createImport(data);
-        return { status: HttpStatus.CREATED, message: 'message.import.created', data: result };
-    }
+  /**
+   * Endpoint to record a new inventory stock import transaction.
+   *
+   * @param data DTO payload containing warehouseId, supplierId, and imported product items.
+   * @returns ApiResponse containing created import transaction record.
+   */
+  @UseGuards(JwtAccessGuard)
+  @Post()
+  async createImport(
+    @Body() data: CreateImportBodyDto
+  ): Promise<ApiResponse<unknown>> {
+    const result = await this.importService.createImport(data);
+    return {
+      status: HttpStatus.CREATED,
+      message: 'message.import.created',
+      data: result
+    };
+  }
 }

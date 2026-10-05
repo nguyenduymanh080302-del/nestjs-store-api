@@ -31,6 +31,15 @@
 $ npm install
 ```
 
+## Cloudflare R2 image storage
+
+Product image uploads are stored in a Cloudflare R2 bucket. Copy `.env.example`
+to `.env`, create an R2 API token with object read/write access, and set the
+`R2_*` values. `R2_PUBLIC_URL` must be the bucket's enabled `r2.dev` URL or a
+custom domain connected to that bucket; API credentials are never returned to
+the frontend. Uploaded objects use the fixed `images/<uuid>.<extension>` key
+structure.
+
 ## Compile and run the project
 
 ```bash

@@ -15,11 +15,11 @@ import { SessionModule } from 'modules/session/session.module';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get("JWT_SECRET"),
+        secret: config.get('JWT_SECRET')
       })
     })
   ],
   controllers: [AuthController],
-  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
+  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy]
 })
-export class AuthModule { }
+export class AuthModule {}

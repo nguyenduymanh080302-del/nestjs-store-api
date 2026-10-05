@@ -115,7 +115,6 @@ model ProductUnit {
   vatPercent        Float
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  extraPrices       Json?
   importPrice       Float              @default(0)
   importItems       ImportItem[]
   orderProducts     OrderProduct[]
@@ -250,7 +249,6 @@ model OrderProduct {
   sellPrice   Float
   unitId      Int
   vatPercent  Float
-  extraPrice  Float
   warehouseId Int?
   order       Order       @relation(fields: [orderId], references: [id])
   productUnit ProductUnit @relation(fields: [productId, unitId], references: [productId, unitId])

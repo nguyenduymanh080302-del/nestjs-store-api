@@ -3,7 +3,10 @@ import {
   Injectable,
   NotFoundException
 } from '@nestjs/common';
-import { CreateCategoryBodyDto, UpdateCategoryBodyDto } from 'common/dto/category.dto';
+import {
+  CreateCategoryBodyDto,
+  UpdateCategoryBodyDto
+} from 'common/dto/category.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -13,7 +16,7 @@ export class CategoryService {
    *
    * @param prisma Database service instance for Prisma ORM.
    */
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Creates a new product category after checking slug uniqueness.
@@ -22,19 +25,17 @@ export class CategoryService {
    * @returns The created category entity.
    * @throws ConflictException If a category with the same slug already exists.
    */
-  async createCategory(
-    data: CreateCategoryBodyDto,
-  ) {
+  async createCategory(data: CreateCategoryBodyDto) {
     const exists = await this.prisma.category.findUnique({
-      where: { slug: data.slug },
+      where: { slug: data.slug }
     });
 
     if (exists) {
-      throw new ConflictException("message.category.slug-duplicated");
+      throw new ConflictException('message.category.slug-duplicated');
     }
 
     const newCategory = await this.prisma.category.create({ data });
-    return newCategory
+    return newCategory;
   }
 
   /**
@@ -44,7 +45,7 @@ export class CategoryService {
    */
   async findAllCategory() {
     return await this.prisma.category.findMany({
-      orderBy: { slug: 'asc' },
+      orderBy: { slug: 'asc' }
     });
   }
 
@@ -57,7 +58,7 @@ export class CategoryService {
    */
   async findCategoryById(id: number) {
     const category = await this.prisma.category.findUnique({
-      where: { id },
+      where: { id }
     });
 
     if (!category) {
@@ -75,15 +76,12 @@ export class CategoryService {
    * @returns The updated category entity.
    * @throws NotFoundException If the category to update is not found.
    */
-  async updateCategory(
-    id: number,
-    data: UpdateCategoryBodyDto,
-  ) {
+  async updateCategory(id: number, data: UpdateCategoryBodyDto) {
     await this.findCategoryById(id);
 
     return this.prisma.category.update({
       where: { id },
-      data,
+      data
     });
   }
 
@@ -98,7 +96,7 @@ export class CategoryService {
     await this.findCategoryById(id);
 
     return this.prisma.category.delete({
-      where: { id },
+      where: { id }
     });
   }
 }

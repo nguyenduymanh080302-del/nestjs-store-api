@@ -8,11 +8,17 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import { UnitService } from './unit.service';
 import { ApiResponse } from 'src/types';
-import { CreateUnitBodyDto, DeleteUnitParamDto, GetUnitParamDto, UpdateUnitBodyDto, UpdateUnitParamDto } from 'common/dto/unit.dto';
+import {
+  CreateUnitBodyDto,
+  DeleteUnitParamDto,
+  GetUnitParamDto,
+  UpdateUnitBodyDto,
+  UpdateUnitParamDto
+} from 'common/dto/unit.dto';
 import { UnitEntity } from 'common/entities/unit.entity';
 import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
 
@@ -23,7 +29,7 @@ export class UnitController {
    *
    * @param unitService Service handling measurement unit operations.
    */
-  constructor(private readonly unitService: UnitService) { }
+  constructor(private readonly unitService: UnitService) {}
 
   /**
    * Endpoint to create a new measurement unit.
@@ -33,13 +39,15 @@ export class UnitController {
    */
   @UseGuards(JwtAccessGuard)
   @Post()
-  async createUnit(@Body() data: CreateUnitBodyDto): Promise<ApiResponse<UnitEntity>> {
+  async createUnit(
+    @Body() data: CreateUnitBodyDto
+  ): Promise<ApiResponse<UnitEntity>> {
     const result = await this.unitService.createUnit(data);
 
     return {
       status: HttpStatus.CREATED,
       message: 'message.unit.created',
-      data: result,
+      data: result
     };
   }
 
@@ -55,7 +63,7 @@ export class UnitController {
     return {
       status: HttpStatus.OK,
       message: 'message.unit.success',
-      data: result,
+      data: result
     };
   }
 
@@ -66,13 +74,15 @@ export class UnitController {
    * @returns ApiResponse containing unit entity.
    */
   @Get(':id')
-  async findUnitById(@Param() params: GetUnitParamDto): Promise<ApiResponse<UnitEntity>> {
+  async findUnitById(
+    @Param() params: GetUnitParamDto
+  ): Promise<ApiResponse<UnitEntity>> {
     const result = await this.unitService.findUnitById(params.id);
 
     return {
       status: HttpStatus.OK,
       message: 'message.unit.success',
-      data: result,
+      data: result
     };
   }
 
@@ -86,9 +96,12 @@ export class UnitController {
    */
   @UseGuards(JwtAccessGuard)
   @Patch(':id')
-  async updateUnit(@Param() params: UpdateUnitParamDto, @Body() data: UpdateUnitBodyDto): Promise<ApiResponse<UnitEntity>> {
+  async updateUnit(
+    @Param() params: UpdateUnitParamDto,
+    @Body() data: UpdateUnitBodyDto
+  ): Promise<ApiResponse<UnitEntity>> {
     if (!data.name) {
-      throw new BadRequestException("message.unit.missing-data")
+      throw new BadRequestException('message.unit.missing-data');
     }
 
     const result = await this.unitService.updateUnit(params.id, data);
@@ -96,7 +109,7 @@ export class UnitController {
     return {
       status: HttpStatus.OK,
       message: 'message.unit.updated',
-      data: result,
+      data: result
     };
   }
 
@@ -107,12 +120,14 @@ export class UnitController {
    * @returns ApiResponse indicating unit deletion success.
    */
   @Delete(':id')
-  async removeUnit(@Param() params: DeleteUnitParamDto): Promise<ApiResponse<null>> {
+  async removeUnit(
+    @Param() params: DeleteUnitParamDto
+  ): Promise<ApiResponse<null>> {
     await this.unitService.removeUnit(params.id);
 
     return {
       status: HttpStatus.OK,
-      message: 'message.unit.deleted',
+      message: 'message.unit.deleted'
     };
   }
 }

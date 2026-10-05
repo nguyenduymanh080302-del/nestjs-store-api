@@ -8,11 +8,17 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { ApiResponse } from 'src/types';
-import { CreateCategoryBodyDto, DeleteCategoryParamDto, GetCategoryParamDto, UpdateCategoryBodyDto, UpdateCategoryParamDto } from 'common/dto/category.dto';
+import {
+  CreateCategoryBodyDto,
+  DeleteCategoryParamDto,
+  GetCategoryParamDto,
+  UpdateCategoryBodyDto,
+  UpdateCategoryParamDto
+} from 'common/dto/category.dto';
 import { CategoryEntity } from 'common/entities/category.entity';
 import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
 
@@ -23,7 +29,7 @@ export class CategoryController {
    *
    * @param categoryService Service handling product category business logic.
    */
-  constructor(private readonly categoryService: CategoryService) { }
+  constructor(private readonly categoryService: CategoryService) {}
 
   /**
    * Endpoint to create a new category.
@@ -33,13 +39,15 @@ export class CategoryController {
    */
   @UseGuards(JwtAccessGuard)
   @Post()
-  async createCategory(@Body() data: CreateCategoryBodyDto): Promise<ApiResponse<CategoryEntity>> {
+  async createCategory(
+    @Body() data: CreateCategoryBodyDto
+  ): Promise<ApiResponse<CategoryEntity>> {
     const result = await this.categoryService.createCategory(data);
 
     return {
       status: HttpStatus.CREATED,
       message: 'message.category.created',
-      data: result,
+      data: result
     };
   }
 
@@ -55,7 +63,7 @@ export class CategoryController {
     return {
       status: HttpStatus.OK,
       message: 'message.category.success',
-      data: result,
+      data: result
     };
   }
 
@@ -66,13 +74,15 @@ export class CategoryController {
    * @returns ApiResponse containing category entity.
    */
   @Get(':id')
-  async findCategoryById(@Param() params: GetCategoryParamDto): Promise<ApiResponse<CategoryEntity>> {
+  async findCategoryById(
+    @Param() params: GetCategoryParamDto
+  ): Promise<ApiResponse<CategoryEntity>> {
     const result = await this.categoryService.findCategoryById(params.id);
 
     return {
       status: HttpStatus.OK,
       message: 'message.category.success',
-      data: result,
+      data: result
     };
   }
 
@@ -86,9 +96,12 @@ export class CategoryController {
    */
   @UseGuards(JwtAccessGuard)
   @Patch(':id')
-  async updateCategory(@Param() params: UpdateCategoryParamDto, @Body() data: UpdateCategoryBodyDto,): Promise<ApiResponse<CategoryEntity>> {
+  async updateCategory(
+    @Param() params: UpdateCategoryParamDto,
+    @Body() data: UpdateCategoryBodyDto
+  ): Promise<ApiResponse<CategoryEntity>> {
     if (!data.name && !data.slug) {
-      throw new BadRequestException("message.category.missing-data")
+      throw new BadRequestException('message.category.missing-data');
     }
 
     const result = await this.categoryService.updateCategory(params.id, data);
@@ -96,7 +109,7 @@ export class CategoryController {
     return {
       status: HttpStatus.OK,
       message: 'message.category.updated',
-      data: result,
+      data: result
     };
   }
 
@@ -107,12 +120,14 @@ export class CategoryController {
    * @returns ApiResponse indicating category deletion success.
    */
   @Delete(':id')
-  async removeCategory(@Param() params: DeleteCategoryParamDto): Promise<ApiResponse<null>> {
+  async removeCategory(
+    @Param() params: DeleteCategoryParamDto
+  ): Promise<ApiResponse<null>> {
     await this.categoryService.removeCategory(params.id);
 
     return {
       status: HttpStatus.OK,
-      message: 'message.category.deleted',
+      message: 'message.category.deleted'
     };
   }
 }

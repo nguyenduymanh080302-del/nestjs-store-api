@@ -7,7 +7,7 @@ import {
   Post,
   Req,
   UnauthorizedException,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import { GetUser } from 'common/decorators/account.decorator';
 import { SigninDto, SignupDto } from 'common/dto/auth.dto';
@@ -16,7 +16,11 @@ import { JwtRefreshGuard } from 'common/guards/jwt-refresh.guard';
 import type { Request } from 'express';
 import { ApiResponse } from 'src/types';
 import { AuthService } from './auth.service';
-import { AccountEntity } from 'common/entities/account.entity';
+import { Throttle } from '@nestjs/throttler';
+
+type AccountDetails = NonNullable<
+  Awaited<ReturnType<AuthService['getAccountById']>>
+>;
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +29,7 @@ export class AuthController {
    *
    * @param authService Service handling authentication and account domain operations.
    */
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   /**
    * Endpoint for user account registration.
@@ -34,12 +38,15 @@ export class AuthController {
    * @returns ApiResponse containing created account ID.
    */
   @Post('signup')
-  async signup(@Body() payload: SignupDto): Promise<ApiResponse<{ accountId: number }>> {
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async signup(
+    @Body() payload: SignupDto
+  ): Promise<ApiResponse<{ accountId: number }>> {
     const data = await this.authService.signup(payload);
     return {
       status: HttpStatus.CREATED,
       message: 'message.account.created',
-      data,
+      data
     };
   }
 
@@ -51,16 +58,17 @@ export class AuthController {
    * @returns ApiResponse containing tokens and account data.
    */
   @Post('signin')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   async signin(
     @Body() payload: SigninDto,
     @Req() req: Request
-  ): Promise<ApiResponse<{ accessToken: string; refreshToken: string, account: any }>> {
+  ): Promise<ApiResponse<Awaited<ReturnType<AuthService['signin']>>>> {
     const data = await this.authService.signin(payload, req);
     return {
       status: HttpStatus.OK,
       message: 'message.account.signin-success',
-      data,
+      data
     };
   }
 
@@ -74,12 +82,12 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(
-    @GetUser('sessionId') sessionId: number,
+    @GetUser('sessionId') sessionId: number
   ): Promise<ApiResponse<null>> {
     await this.authService.logout(sessionId);
     return {
       status: HttpStatus.OK,
-      message: 'message.account.logout-success',
+      message: 'message.account.logout-success'
     };
   }
 
@@ -93,15 +101,21 @@ export class AuthController {
   @UseGuards(JwtAccessGuard)
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  async getAccountByToken(@GetUser("accountId") accountId: number): Promise<ApiResponse<Omit<AccountEntity, "password">>> {
+  async getAccountByToken(
+    @GetUser('accountId') accountId: number
+  ): Promise<ApiResponse<AccountDetails>> {
     if (!accountId) {
-      throw new UnauthorizedException("message.account.id-not-found")
+      throw new UnauthorizedException('message.account.id-not-found');
     }
-    const data: any = await this.authService.getAccountById(accountId);
+    const data = await this.authService.getAccountById(accountId);
+    if (!data) {
+      throw new UnauthorizedException('message.account.unauthorized');
+    }
+
     return {
       status: HttpStatus.OK,
       message: 'message.account.is-authenticated',
-      data,
+      data
     };
   }
 
@@ -119,18 +133,18 @@ export class AuthController {
   async refresh(
     @GetUser('accountId') accountId: number,
     @GetUser('sessionId') sessionId: number,
-    @GetUser('refreshToken') refreshToken: string,
+    @GetUser('refreshToken') refreshToken: string
   ): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
     const data = await this.authService.refresh(
       accountId,
       sessionId,
-      refreshToken,
+      refreshToken
     );
 
     return {
       status: HttpStatus.OK,
       message: 'message.account.refresh-success',
-      data,
+      data
     };
   }
 }
